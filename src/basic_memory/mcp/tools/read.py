@@ -254,7 +254,13 @@ def _text_file_lines(
                 **_continuation(first, last, total),
             }
         )
-    return format_line_read(sliced.content, start_line=first, end_line=last, total_lines=total)
+    return format_line_read(
+        sliced.content,
+        start_line=first,
+        end_line=last,
+        total_lines=total,
+        includes_frontmatter=False,
+    )
 
 
 def _present_file(

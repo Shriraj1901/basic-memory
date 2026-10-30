@@ -65,6 +65,19 @@ def test_an_empty_document_numbers_no_lines() -> None:
     assert text == "Lines 0-0 of 0 (document, including frontmatter); EOF"
 
 
+def test_a_slice_names_frontmatter_only_when_the_document_can_have_it() -> None:
+    note = format_line_read("a\nb", start_line=10, end_line=11, total_lines=30)
+    plain = format_line_read(
+        "a\nb", start_line=10, end_line=11, total_lines=30, includes_frontmatter=False
+    )
+
+    assert note.splitlines()[0] == (
+        "Lines 10-11 of 30 (document, including frontmatter); next: start_line=12, end_line=13"
+    )
+    assert plain.splitlines()[0] == "Lines 10-11 of 30; next: start_line=12, end_line=13"
+    assert plain.splitlines()[1:] == ["10: a", "11: b"]
+
+
 @pytest.mark.parametrize(("first", "last", "total"), [(1, 0, 0), (20, 10, 10)])
 def test_numbered_empty_or_past_eof(first: int, last: int, total: int) -> None:
     assert format_line_read("", start_line=first, end_line=last, total_lines=total).endswith(

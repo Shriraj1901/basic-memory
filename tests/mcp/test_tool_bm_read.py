@@ -166,6 +166,24 @@ async def test_first_lines_via_end_line(client, test_project):
     text = await read_text("notes/Plan.md", project=test_project.name, end_line=2)
 
     assert text.startswith("Lines 1-2 of ")
+    assert text.splitlines()[0].count("(document, including frontmatter)") == 1
+
+
+@pytest.mark.asyncio
+async def test_a_markdown_file_without_frontmatter_keeps_the_note_header(
+    client, project_repository, session_maker, test_project, test_files
+):
+    (test_files["image"].parent / "bare.md").write_text("one\ntwo\nthree\n")
+    runner = LocalProjectIndexRunner(
+        project_repository=project_repository, session_maker=session_maker
+    )
+    await runner.index_project(test_project.id, force_full=True)
+
+    text = await read_text("bare.md", project=test_project.name, start_line=1, end_line=2)
+
+    # Indexing adds the frontmatter, so the file now reads as a note.
+    assert text.startswith("Lines 1-2 of ")
+    assert text.splitlines()[0].count("(document, including frontmatter)") == 1
 
 
 # --- Metadata only ---
@@ -234,7 +252,7 @@ async def test_a_text_file_reads_a_line_range(client, test_project, non_note_fil
     assert (payload["next_start_line"], payload["next_end_line"]) == (4, 5)
     assert payload["file_path"] == "source.txt"
     assert payload["content_type"].startswith("text/plain")
-    assert text.startswith("Lines 2-3 of 5")
+    assert text.splitlines()[0] == "Lines 2-3 of 5; next: start_line=4, end_line=5"
     assert "3: Call me Ishmael." in text
 
 
@@ -261,7 +279,7 @@ async def test_an_empty_text_file_reads_as_the_empty_range(client, test_project,
     assert payload["content"] == ""
     assert (payload["start_line"], payload["end_line"], payload["total_lines"]) == (0, 0, 0)
     assert payload["has_more"] is False
-    assert text == "Lines 0-0 of 0 (document, including frontmatter); EOF"
+    assert text == "Lines 0-0 of 0; EOF"
 
 
 @pytest.mark.asyncio

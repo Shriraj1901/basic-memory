@@ -74,9 +74,15 @@ def format_line_read(
     start_line: int,
     end_line: int,
     total_lines: int,
+    includes_frontmatter: bool = True,
 ) -> str:
-    """Render a slice with copyable coordinates and a bounded continuation hint."""
-    header = f"Lines {start_line}-{end_line} of {total_lines} (document, including frontmatter)"
+    """Render a slice with copyable coordinates and a bounded continuation hint.
+
+    Markdown notes count their frontmatter lines; plain text files have none.
+    """
+    header = f"Lines {start_line}-{end_line} of {total_lines}"
+    if includes_frontmatter:
+        header += " (document, including frontmatter)"
     # The slice has no terminal newline. Splitting on '\n' preserves a final
     # blank selected line; the coordinate range distinguishes it from EOF.
     numbered = (
